@@ -1,6 +1,6 @@
 import unittest
 from tkinter import Tk
-from progresspanel import Progresspanel, _Status
+from progresspanel.progresspanel import Progresspanel, _Status
 
 
 class TestProgressPanel(unittest.TestCase):
