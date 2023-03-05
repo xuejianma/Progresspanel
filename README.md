@@ -17,7 +17,7 @@ function to be run in a loop.
 Here below is an example code that creates a window with a progress bar and
 buttons to control the task as shown in the GIF:
 
-![ezgif-3-dea23f257e](https://user-images.githubusercontent.com/26315299/222948547-79bec920-ff00-4c3d-af2e-95e25aeda18b.gif)
+![progress_demo](https://user-images.githubusercontent.com/26315299/222949633-12fcda1e-4eb0-4287-b0da-045162061d7c.gif)
 
 ```python
 import tkinter as tk
