@@ -11,8 +11,15 @@ class Progresspanel(ttk.Frame):
     progress_bar pre-set in self.frame for easy use.
     """
 
-    def __init__(self, parent, total: int = 1, task: callable = None,
-                 title: str = None, verbose: bool = True):
+    def __init__(
+        self,
+        parent,
+        total: int = 1,
+        task: callable = None,
+        title: str = None,
+        display_time_left: bool = True,
+        verbose: bool = True,
+    ):
         """
         :param parent: parent widget
         :param total: total number of iterations for self.i in task_loop to
@@ -20,6 +27,8 @@ class Progresspanel(ttk.Frame):
         :param task: user-defined task to be run in a loop. This should be
             customized. User can set this in set_task() or overwrite task().
         :param title: title of the task. It will be shown in the progress panel.
+        :param display_time_left: whether to display the remaining time in the
+            status label.
         :param verbose: whether to print out the status of the task to terminal
             in pre-defined after_ methods. User can also use it in overwritten
             after_ methods for debugging.
@@ -51,6 +60,7 @@ class Progresspanel(ttk.Frame):
         self._set_total(total)
         self.set_task(task)
         self.title = title
+        self.display_time_left = display_time_left
         self.set_verbose(verbose)
         self._time_per_iteration = 0
         self._remaining_time = 0
@@ -169,24 +179,23 @@ class Progresspanel(ttk.Frame):
         if self.title is not None:
             ttk.Label(frame_upper, text=self.title).pack(side="top")
         self._progress_bar = ttk.Progressbar(
-            frame_upper, orient="horizontal", length=200, mode="determinate")
+            frame_upper, orient="horizontal", length=200, mode="determinate"
+        )
         self._progress_bar.pack(side="left")
         frame_middle = ttk.Frame(self)
         frame_middle.pack()
-        self._label_status = ttk.Label(
-            frame_middle, text=self._get_progress_notice())
+        self._label_status = ttk.Label(frame_middle, text=self._get_progress_notice())
         self._label_status.pack(side="left")
         frame_lower = ttk.Frame(self)
         frame_lower.pack()
-        self._button_start = ttk.Button(
-            frame_lower, text="Start", command=self._start)
+        self._button_start = ttk.Button(frame_lower, text="Start", command=self._start)
         self._button_start.pack(side="left")
-        self._button_pause = ttk.Button(
-            frame_lower, text="Pause", command=self._pause)
+        self._button_pause = ttk.Button(frame_lower, text="Pause", command=self._pause)
         self._button_pause["state"] = "disabled"
         self._button_pause.pack(side="left")
         self._button_terminate = ttk.Button(
-            frame_lower, text="Terminate", command=self._terminate)
+            frame_lower, text="Terminate", command=self._terminate
+        )
         self._button_terminate["state"] = "disabled"
         self._button_terminate.pack(side="left")
 
@@ -198,18 +207,25 @@ class Progresspanel(ttk.Frame):
         try:
             if calculate_remaining_time:
                 self._remaining_time = int(
-                    self._time_per_iteration * (self.total - self.i + (
-                        self._i_init if self._i_init else 0)) /
-                    self._iteration_step)
+                    self._time_per_iteration
+                    * (self.total - self.i + (self._i_init if self._i_init else 0))
+                    / self._iteration_step
+                )
             if self.status == _Status._TERMINATED:
                 return "Ready"
         except Exception as e:
             raise e
         finally:
             self._mutex_progress_notice.release()
+        if not self.display_time_left:
+            return "{}/{}".format(self.i, self.total)
         return "{}/{}. Time left: {}".format(
-            self.i, self.total, timedelta(seconds=self._remaining_time)
-            if self._remaining_time > 0 else "--:--:--")
+            self.i,
+            self.total,
+            timedelta(seconds=self._remaining_time)
+            if self._remaining_time > 0
+            else "--:--:--",
+        )
 
     def _timer(self):
         """
@@ -218,7 +234,8 @@ class Progresspanel(ttk.Frame):
         while self.status == _Status._RUNNING:
             self._remaining_time = max(0, self._remaining_time - 1)
             self._label_status.config(
-                text=self._get_progress_notice(calculate_remaining_time=False))
+                text=self._get_progress_notice(calculate_remaining_time=False)
+            )
             sleep(1)
 
     def _start(self):
@@ -250,11 +267,10 @@ class Progresspanel(ttk.Frame):
         curr_timestamp = time()
         if self._iteration_timestamp is not None:
             self._iteration_step = i - self.i
-            self._time_per_iteration = (self._time_per_iteration * (
-                self.i - self._i_init) + (
-                curr_timestamp - self._iteration_timestamp) *
-                self._iteration_step) / (
-                self.i - self._i_init + self._iteration_step)
+            self._time_per_iteration = (
+                self._time_per_iteration * (self.i - self._i_init)
+                + (curr_timestamp - self._iteration_timestamp) * self._iteration_step
+            ) / (self.i - self._i_init + self._iteration_step)
         self._iteration_timestamp = curr_timestamp
         self._pause_resumed = False
         self.i = i
@@ -290,7 +306,8 @@ class Progresspanel(ttk.Frame):
                 if not self.task:
                     e = Exception("Task not passed to Progresspanel.")
                 self._label_status.config(
-                    text="Error at {}/{}: {}".format(self.i, self.total, e))
+                    text="Error at {}/{}: {}".format(self.i, self.total, e)
+                )
                 self.after_terminated()
                 raise e
         else:
@@ -337,6 +354,7 @@ class _Status:
     be paused after the current iteration is done and goes into PAUSED state
     afterwards. Same for TERMINATING and TERMINATED.
     """
+
     _RUNNING = 1
     _PAUSING = 2
     _PAUSED = 3

@@ -59,6 +59,8 @@ Create a new Progresspanel widget.
 * total: the total number of iterations for the task.
 * task: the task function to be run in a loop.
 * title: the title of the progress panel.
+* display_time_left: a bool to determine whether to display the remaining time
+in the status label, default to True.
 * verbose: whether to print status updates to the console.
 
 ### set_total(total)
